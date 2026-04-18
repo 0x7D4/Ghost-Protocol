@@ -136,51 +136,26 @@ static_fallback = "ERROR: SYSTEM_HALTED_0xDEADBEEF\r\n"
 
 ## Requirements
 
-- **Linux Kernel 5.15+**: Required for BPF_PROG_TYPE_TRACING and modern map types.
-- **Capabilities**: `CAP_NET_ADMIN` and `CAP_BPF` are required to load the eBPF data plane.
-- **Rust 1.80+** (stable) + **nightly** toolchain for `ghost-ebpf`.
-- **Ollama (Optional)**: For dynamic LLM-powered deception. Recommended model: `phi3:mini`.
+| Requirement | Version | Notes |
+|---|---|---|
+| Linux kernel | 5.15+ | Required for XDP/TC eBPF hooks |
+| CAP_NET_ADMIN + CAP_BPF | — | Required to load eBPF programs |
+| Rust stable | 1.80+ | Workspace compilation |
+| Rust nightly | latest | ghost-ebpf BPF target only |
+| ollama + phi3:mini | optional | LLM persona engine |
 
-**eBPF Toolchain Setup** (required to compile `ghost-ebpf`):
-
-```bash
-# Install the nightly toolchain
-rustup toolchain install nightly
-
-# Add the BPF bare-metal target
-rustup target add bpfel-unknown-none --toolchain nightly
-
-# Install the BPF linker
-cargo install bpf-linker
-
-# Build the eBPF component
-cargo +nightly build \
-  --manifest-path crates/ghost-ebpf/Cargo.toml \
-  --target bpfel-unknown-none \
-  -Z build-std=core \
-  --release
-```
-
-> The rest of the workspace (`ghostd`, `ghost-proxy`, `ghost-knock`, `ghost-ui`) builds with stable Rust via `cargo build --release --workspace`.
-
-## Setting Up Ollama (Optional)
-
-Ollama powers the LLM Persona Engine — the part that generates dynamic, contextually-aware responses to fool automated scanners and human attackers.
+### One-Command Setup (Ubuntu 22.04+)
 
 ```bash
-# 1. Install ollama
-curl -fsSL https://ollama.ai/install.sh | sh
+# Install all dependencies automatically
+bash scripts/setup.sh
 
-# 2. Pull the recommended model (~2GB download)
-ollama pull phi3:mini
-
-# 3. Verify it works
-ollama run phi3:mini "Say hello as an SSH server"
+# With ollama LLM support:
+bash scripts/setup.sh --with-ollama
 ```
 
-> **Without Ollama**: If ollama is not running, Ghost-Protocol automatically falls back to static protocol banners for each persona. The tarpit remains fully functional — attackers still get trapped and slow-drained, they just receive pre-written responses instead of dynamically generated ones.
+The setup script handles everything: system packages, Rust stable + nightly, bpf-linker, and optionally ollama + phi3:mini.
 
-> **Resource usage**: `phi3:mini` runs on CPU with ~2GB RAM. For a lightweight VPS, this is sufficient. For higher-traffic servers, consider running ollama on a separate machine and pointing `ollama_url` in `ghostd.toml` to that address.
 
 ## ⚠️ Before You Start — Allowlist Your IP
 
