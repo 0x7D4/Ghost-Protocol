@@ -48,34 +48,37 @@ cargo build --release --workspace
 sudo ./target/release/ghostd --config ghostd.toml
 ```
 
-## Generating Your TOTP Secret
-
-Before configuring anything, generate a shared secret. This is the cryptographic key that both the server and your SSH client use to derive the current active port.
-
+First time? Run the setup script instead — it handles everything including TOTP secret generation and SSH config:
 ```bash
-# Option 1: openssl (recommended, available everywhere)
-openssl rand -base32 20
-
-# Option 2: Python (no external deps)
-python3 -c "import base64,os; print(base64.b32encode(os.urandom(20)).decode())"
-
-# Option 3: ghost-knock binary
-./target/release/ghost-knock --gen-secret
+bash scripts/setup.sh
+# With ollama LLM support:
+bash scripts/setup.sh --with-ollama
 ```
 
-> **Save this secret — you need it on both your server (`ghostd.toml`) and your client (`~/.ssh/config`). Treat it like an SSH private key.**
+## Generating Your TOTP Secret
+The setup script generates and saves your secret automatically.
+To generate one manually:
+```bash
+openssl rand -base32 20
+```
+> Save this secret — you need it on both your server 
+> (ghostd.toml) and your client (~/.ssh/config). 
+> Treat it like an SSH private key.
 
 ## SSH Connectivity
+The setup script configures this automatically when you 
+run `bash scripts/setup.sh`.
 
-To connect to your server transparently, add the following to your `~/.ssh/config`. The `ghost-knock` utility will derive the current active port and establish a secure tunnel.
+To configure manually, add to ~/.ssh/config:
 
 ```ssh
-Host my-hardened-server
-    HostName 1.2.3.4
-    User myuser
-    ProxyCommand ghost-knock %h 22 1000 "JBSWY3DPEBLW64TMMQ======"
+Host ghost-server
+    HostName YOUR_SERVER_IP
+    User YOUR_USERNAME
+    ProxyCommand /path/to/ghost-knock %h 10000 1000 "YOUR_SECRET"
 ```
-*> Note: Replace the secret with your actual Base32 TOTP key.*
+
+Then connect with: `ssh ghost-server`
 
 ## ghostd.toml Configuration Reference
 
@@ -147,10 +150,11 @@ static_fallback = "ERROR: SYSTEM_HALTED_0xDEADBEEF\r\n"
 ### One-Command Setup (Ubuntu 22.04+)
 
 ```bash
-# Install all dependencies automatically
+# Installs deps, generates TOTP secret, configures SSH, 
+# and runs cargo check + clippy + test
 bash scripts/setup.sh
 
-# With ollama LLM support:
+# Also installs ollama + phi3:mini:
 bash scripts/setup.sh --with-ollama
 ```
 

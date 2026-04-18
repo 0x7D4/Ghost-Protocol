@@ -57,11 +57,82 @@ else
   echo -e "${YELLOW}Skipping ollama. Re-run with --with-ollama to enable LLM personas.${NC}"
 fi
 
+# --- SECTION 1: TOTP Secret Generation ---
+
+read -rp "Generate a TOTP secret now? (y/n): " gen_secret
+if [[ "$gen_secret" == "y" ]]; then
+  SECRET=$(openssl rand -base32 20)
+  echo ""
+  echo -e "${GREEN}Your TOTP secret:${NC}"
+  echo "  $SECRET"
+  echo ""
+  echo "Add this to ghostd.toml under [knock]:"
+  echo "  secret = \"$SECRET\""
+  echo ""
+  # Save to a temp file for SSH config step below
+  echo "$SECRET" > /tmp/ghost_secret.txt
+fi
+
+# --- SECTION 2: SSH Config Setup ---
+
+if [[ -f /tmp/ghost_secret.txt ]]; then
+  SECRET=$(cat /tmp/ghost_secret.txt)
+  read -rp "Configure ~/.ssh/config for ghost-knock now? (y/n): " cfg_ssh
+  if [[ "$cfg_ssh" == "y" ]]; then
+    read -rp "Server IP or hostname: " SERVER_HOST
+    read -rp "SSH username: " SSH_USER
+    read -rp "Base port (default 10000): " BASE_PORT
+    BASE_PORT=${BASE_PORT:-10000}
+    read -rp "Port range (default 1000): " PORT_RANGE
+    PORT_RANGE=${PORT_RANGE:-1000}
+
+    # Ensure ~/.ssh directory exists
+    mkdir -p ~/.ssh
+    chmod 700 ~/.ssh
+
+    # Check if entry already exists
+    if grep -q "Ghost-Protocol" ~/.ssh/config 2>/dev/null; then
+      echo -e "${YELLOW}Ghost-Protocol entry already exists in ~/.ssh/config — skipping.${NC}"
+    else
+      cat >> ~/.ssh/config <<EOF
+
+# Ghost-Protocol — added by setup.sh
+Host ghost-server
+    HostName $SERVER_HOST
+    User $SSH_USER
+    ProxyCommand $(pwd)/target/release/ghost-knock %h $BASE_PORT $PORT_RANGE "$SECRET"
+EOF
+      chmod 600 ~/.ssh/config
+      echo -e "${GREEN}SSH config updated. Connect with: ssh ghost-server${NC}"
+    fi
+  fi
+  rm -f /tmp/ghost_secret.txt
+fi
+
+# --- SECTION 3: Test the whole setup ---
+
+echo -e "${YELLOW}Running self-test...${NC}"
+
+# Test 1: cargo check
+echo "  [1/3] cargo check --workspace"
+cargo check --workspace --quiet && \
+  echo -e "  ${GREEN}PASS${NC}" || \
+  echo -e "  ${RED}FAIL — run: cargo check --workspace${NC}"
+
+# Test 2: cargo clippy
+echo "  [2/3] cargo clippy --workspace"
+cargo clippy --workspace --quiet -- -D warnings && \
+  echo -e "  ${GREEN}PASS${NC}" || \
+  echo -e "  ${RED}FAIL — run: cargo clippy --workspace${NC}"
+
+# Test 3: cargo test
+echo "  [3/3] cargo test --workspace"
+cargo test --workspace --quiet -- --test-threads=1 && \
+  echo -e "  ${GREEN}PASS — all tests passing${NC}" || \
+  echo -e "  ${RED}FAIL — run: cargo test --workspace${NC}"
+
 echo -e "${GREEN}"
 echo "================================================"
-echo " Ghost-Protocol dependencies installed."
-echo " Next steps:"
-echo "   cargo build --release --workspace"
-echo "   sudo ./target/release/ghostd --config ghostd.toml"
+echo " Ghost-Protocol setup complete."
 echo "================================================"
 echo -e "${NC}"
