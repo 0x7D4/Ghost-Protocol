@@ -1,0 +1,20 @@
+[package]
+name = "ghost-proxy"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { workspace = true }
+base32 = "0.4.0"
+serde = { workspace = true, features = ["derive"] }
+toml = "0.8"
+tokio = { workspace = true, features = ["full"] }
+totp-lite = "1.0.3"
+sha1 = "0.10"
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+ghost-common = { path = "../ghost-common" }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full", "test-util"] }
+reqwest = { version = "0.11", features = ["blocking"] }

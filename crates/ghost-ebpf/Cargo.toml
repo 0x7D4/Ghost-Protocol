@@ -1,0 +1,20 @@
+[package]
+name = "ghost-ebpf"
+version = "0.1.0"
+edition = "2021"
+description = "eBPF XDP + TC hooks for Ghost-Protocol (Linux only, nightly)"
+
+# NOTE: This crate is excluded from the workspace.
+# Build with: cargo +nightly build -p ghost-ebpf --target bpfel-unknown-none -Z build-std=core
+
+[dependencies]
+aya-ebpf = "0.1.1"
+network-types = "0.0.5"
+# ghost-common types used via #[repr(C)] shared structs
+# Cannot use path dependency here since this compiles for bpfel-unknown-none
+# Shared types are duplicated with #[repr(C)] in src/maps.rs
+
+[profile.release]
+opt-level = "z"
+lto = true
+panic = "abort"

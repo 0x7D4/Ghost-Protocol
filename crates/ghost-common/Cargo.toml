@@ -1,0 +1,14 @@
+[package]
+name = "ghost-common"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Shared types, configuration, and protocol definitions for Ghost-Protocol"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+toml = { workspace = true }
+tokio = { workspace = true }

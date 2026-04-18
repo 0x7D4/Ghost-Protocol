@@ -1,0 +1,25 @@
+[package]
+name = "ghost-knock"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "TOTP-based port derivation CLI for Ghost-Protocol"
+
+[[bin]]
+name = "ghost-knock"
+path = "src/main.rs"
+
+[dependencies]
+ghost-common = { workspace = true }
+totp-lite = "1.0.3"
+sha1 = "0.10"
+base32 = "0.4.0"
+clap = { version = "4.5", features = ["derive", "env"] }
+tokio = { version = "1.37", features = ["full"] }
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
