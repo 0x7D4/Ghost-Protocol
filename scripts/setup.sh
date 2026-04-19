@@ -55,6 +55,14 @@ echo "Set interface = \"$IFACE\" in ghostd.toml"
 if [[ "$WITH_OLLAMA" == true ]]; then
   echo -e "${YELLOW}Installing ollama...${NC}"
   curl -fsSL https://ollama.ai/install.sh | sh
+  echo -e "${YELLOW}Waiting for ollama service to start...${NC}"
+  for i in {1..10}; do
+    if ollama list &>/dev/null 2>&1; then
+      break
+    fi
+    sleep 2
+  done
+
   echo -e "${YELLOW}Pulling phi3:mini model (~2GB)...${NC}"
   ollama pull phi3:mini
   echo -e "${GREEN}Ollama ready.${NC}"
