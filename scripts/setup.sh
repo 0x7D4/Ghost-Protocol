@@ -66,7 +66,22 @@ fi
 
 read -rp "Generate a TOTP secret now? (y/n): " gen_secret
 if [[ "$gen_secret" == "y" ]]; then
-  SECRET=$(openssl rand -base32 20)
+  SECRET=$(openssl rand -hex 20 2>/dev/null | \
+    python3 -c "import sys,base64; \
+    print(base64.b32encode(bytes.fromhex(sys.stdin.read().strip())).decode())" \
+    2>/dev/null)
+
+  if [[ -z "$SECRET" ]]; then
+    SECRET=$(python3 -c \
+      "import base64,os; \
+      print(base64.b32encode(os.urandom(20)).decode())" \
+      2>/dev/null)
+  fi
+
+  if [[ -z "$SECRET" ]]; then
+    echo -e "${RED}Could not generate secret. Install python3 or upgrade openssl.${NC}"
+    exit 1
+  fi
   echo ""
   echo -e "${GREEN}Your TOTP secret:${NC}"
   echo "  $SECRET"
