@@ -144,7 +144,7 @@ static_fallback = "ERROR: SYSTEM_HALTED_0xDEADBEEF\r\n"
 | Linux kernel | 5.15+ | Required for XDP/TC eBPF hooks |
 | CAP_NET_ADMIN + CAP_BPF | — | Required to load eBPF programs |
 | Rust stable | 1.80+ | Workspace compilation |
-| Rust nightly | latest | ghost-ebpf BPF target only |
+| Rust nightly | latest | ghost-ebpf (requires rust-src) |
 | ollama + phi3:mini | optional | LLM persona engine |
 
 ### One-Command Setup (Ubuntu 22.04+)

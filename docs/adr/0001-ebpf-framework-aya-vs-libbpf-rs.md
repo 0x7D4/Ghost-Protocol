@@ -59,7 +59,8 @@ with the kernel via raw `libc` syscalls — no C `libbpf` dependency.
   - Active development: 1.7M+ downloads, regular releases through 2025
   - `aya-log` crate bridges BPF-side `log!()` macros to userspace `tracing`
 - **Cons**:
-  - Requires Rust nightly toolchain for BPF target (`bpfel-unknown-none`)
+  - Requires Rust nightly toolchain and the `rust-src` component for BPF 
+    compilation (compiled from source via `build-std`)
   - CO-RE (Compile Once — Run Everywhere) support is functional but less
     battle-tested than C `libbpf`'s BTF-based approach
   - Smaller ecosystem of examples compared to `libbpf` (which has decades of
@@ -113,8 +114,8 @@ for kernel-side programs).
    live in `ghost-common` and are used by both `ghost-ebpf` and `ghostd`.
 
 2. **Build simplicity**: The eBPF crate compiles with standard `cargo build`
-   (targeting `bpfel-unknown-none` via nightly). No `clang`, no kernel headers,
-   no `Makefile`. CI just needs `rustup` and `bpf-linker`.
+   (using `-Z build-std=core` via nightly and `rust-src`). No `clang`, no 
+   kernel headers, no `Makefile`. CI just needs `rustup` and `bpf-linker`.
 
 3. **Async integration**: `aya`'s `async_tokio` feature integrates directly
    with our `tokio`-based daemon event loop for map polling and program
@@ -176,6 +177,7 @@ The nightly toolchain requirement for BPF compilation is acceptable because:
   `#[repr(C)]` for ABI compatibility
 - `ghost-ebpf` is excluded from workspace `members`; Linux CI compiles it
   with: `cargo +nightly build -p ghost-ebpf --target bpfel-unknown-none -Z build-std=core`
+  Requires `rust-src` component.
 
 ## Related Decisions
 

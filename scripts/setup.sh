@@ -41,10 +41,15 @@ else
   echo -e "${GREEN}Rust already installed.${NC}"
 fi
 
-echo -e "${YELLOW}Installing nightly toolchain + eBPF target...${NC}"
+echo -e "${YELLOW}Installing nightly toolchain + eBPF requirements...${NC}"
 rustup toolchain install nightly
-rustup target add bpfel-unknown-none --toolchain nightly
+rustup component add rust-src --toolchain nightly
 cargo install bpf-linker
+
+# Auto-detect default interface
+IFACE=$(ip route | grep default | awk '{print $5}' | head -n1)
+echo -e "${GREEN}Detected network interface: $IFACE${NC}"
+echo "Set interface = \"$IFACE\" in ghostd.toml"
 
 # Optional ollama
 if [[ "$WITH_OLLAMA" == true ]]; then
